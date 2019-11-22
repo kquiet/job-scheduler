@@ -530,6 +530,10 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
+								<configuration>
+									<keyname>${gpg-kquiet.keyname}</keyname>
+									<passphraseServerId>gpg-kquiet</passphraseServerId>
+								</configuration>
                             </execution>
                         </executions>
                     </plugin>
