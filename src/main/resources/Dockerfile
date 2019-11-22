@@ -17,4 +17,6 @@ WORKDIR /opt/kquiet/${project.artifactId}
 
 COPY ["jobscheduler.sh", "${project.build.finalName}.jar", "./"]
 
+COPY ["lib", "./lib/"]
+
 ENTRYPOINT ["./jobscheduler.sh"]
