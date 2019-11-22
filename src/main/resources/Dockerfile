@@ -1,6 +1,6 @@
 FROM openjdk:8-jre-alpine3.9
 
-RUN echo '@edgetesting http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
+RUN echo '@edgetesting http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories \
  && apk update \
  && apk add dbus-x11 fontconfig tzdata pptpclient@edgetesting \
  && mkdir -p /usr/share/fonts \
@@ -15,6 +15,6 @@ RUN echo '@edgetesting http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /et
 
 WORKDIR /opt/kquiet/${project.artifactId}
 
-COPY ["${project.build.finalName}.jar", "./"]
+COPY ["jobscheduler.sh", "${project.build.finalName}.jar", "./"]
 
 ENTRYPOINT ["./jobscheduler.sh"]

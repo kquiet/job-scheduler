@@ -215,6 +215,23 @@
 					<repository>docker.io/kquiet/${project.artifactId}</repository>
 					<tag>${project.version}</tag>
 				</configuration>
+				<executions>
+					<execution>
+						<id>dockerfile-build-tag</id>
+						<phase>package</phase>
+						<goals>
+							<goal>build</goal>
+							<goal>tag</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>dockerfile-push</id>
+						<phase>release</phase>
+						<goals>
+							<goal>push</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<artifactId>maven-dependency-plugin</artifactId>
