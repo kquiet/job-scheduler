@@ -113,6 +113,10 @@
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
+                    <excludes>
+                    	<exclude>logback.xml</exclude>
+                    	<exclude>jobscheduler.config</exclude>
+                    </excludes>
                 </configuration>
 			</plugin>
 			<plugin>
