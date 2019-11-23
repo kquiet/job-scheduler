@@ -15,8 +15,8 @@ RUN echo '@edgetesting http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /et
 
 WORKDIR /opt/kquiet/${project.artifactId}
 
-COPY ["jobscheduler.sh", "${project.build.finalName}.jar", "./"]
+COPY ["jobscheduler.sh", "./"]
 
-COPY ["lib", "./lib/"]
+COPY ["${project.build.finalName}.jar", "lib", "./lib/"]
 
 ENTRYPOINT ["./jobscheduler.sh"]

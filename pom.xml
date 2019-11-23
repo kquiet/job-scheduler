@@ -108,8 +108,6 @@
 				<configuration>
                     <archive>
                         <manifest>
-                       		<addClasspath>true</addClasspath>
-                       		<classpathPrefix>lib/</classpathPrefix>
                             <mainClass>${project.groupId}.jobscheduler.Launcher</mainClass>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
