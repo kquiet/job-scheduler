@@ -166,6 +166,11 @@ public class JobCtrl {
 
   private Iterable<JobBase> getConfigJobs() {
     Map<String, JobConfig> jobConfigMap = configInfo.jobs();
+    if (jobConfigMap == null) {
+      LOGGER.warn("Can't find jobs from config!");
+      return new ArrayList<JobBase>();
+    }
+    
     List<JobBase> jobList = new ArrayList<>();
     for (Map.Entry<String, JobConfig> jobConfig:jobConfigMap.entrySet()) {
       String jobName = jobConfig.getKey();
