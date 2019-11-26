@@ -43,7 +43,7 @@ public class Launcher {
             break;
           }
         }
-        DashboardJFrame launchedObj = new DashboardJFrame();
+        MonitorFrame launchedObj = new MonitorFrame();
         launchedObj.setVisible(true);
       } else {
         JobCtrl controller = new JobCtrl();

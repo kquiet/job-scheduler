@@ -142,14 +142,14 @@ public final class TimeUtility {
   }
 
   /**
-   * Calculate next fire {@link LocalDateTime}.
+   * Calculate the date and time of next fire.
    * 
    * @param start the start {@link LocalDateTime} of fireable period
    * @param end  the end {@link LocalDateTime} of fireable period
    * @param dailyStart the start {@link LocalTime} of daily fireable period
    * @param dailyEnd the end {@link LocalTime} of daily fireable period
    * @param from the {@link LocalDateTime} to calculate from
-   * @return the next fire {@link LocalDateTime}
+   * @return the {@link LocalDateTime} of next fire 
    */
   public static LocalDateTime calculateNextFireDateTime(LocalDateTime start, LocalDateTime end,
       LocalTime dailyStart, LocalTime dailyEnd, LocalDateTime from) {

@@ -20,8 +20,10 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.aeonbits.owner.ConfigCache;
-
+import org.kquiet.browser.ActionComposer;
 import org.kquiet.concurrent.PausableThreadPoolExecutor;
+import org.kquiet.jobscheduler.JobCtrl.InteractionType;
+import org.kquiet.jobscheduler.JobCtrl.PauseTarget;
 import org.kquiet.jobscheduler.SystemConfig.JobConfig;
 import org.kquiet.jobscheduler.util.TimeUtility;
 
@@ -85,7 +87,13 @@ public abstract class JobBase {
     return "";
   }
 
-  protected final LocalDateTime getNextFireDateTime(LocalDateTime from) {
+  /**
+   * Calculate the date and time of next fire according to job configuration.
+   * 
+   * @param from the {@link LocalDateTime} to calculate from
+   * @return the {@link LocalDateTime} of next fire 
+   */
+  public final LocalDateTime calculateNextFireDateTime(LocalDateTime from) {
     return TimeUtility.calculateNextFireDateTime(getTimerConfig().start().get(),
         getTimerConfig().end().get(), getTimerConfig().dailyStart().get(),
         getTimerConfig().dailyEnd().get(), from);
@@ -135,10 +143,6 @@ public abstract class JobBase {
     return systemConfig.instanceName();
   }
 
-  public final boolean isInteractive() {
-    return systemConfig.interactiveFlag();
-  }
-
   protected final JobConfig getTimerConfig() {
     return systemConfig.jobs().get(getJobName());
   }
@@ -157,20 +161,79 @@ public abstract class JobBase {
       return null;
     }
   }
-
+  
   /**
-   * Get the associated job controller.
-   * @return associated job controller
+   * Restart internal browser of controlling job controller.
    */
-  public JobCtrl getController() {
-    return controller;
+  public final void restartInternalBrowser() {    
+    if (controller != null) {
+      controller.restartBrowserTaskManager();
+    }
+  }
+  
+  
+  /**
+   * Pause the execution of internal browser. All executing browser tasks will
+   * remain running until they complete.
+   */
+  public final void pauseInternalBrowser() {
+    if (controller != null) {
+      controller.pause(PauseTarget.Browser);
+    }
+  }
+  
+  /**
+   * Resume the execution of internal browser.
+   */
+  public final void resumeInternalBrowser() {
+    if (controller != null) {
+      controller.resume(PauseTarget.Browser);
+    }
+  }
+  
+  /**
+   * Register a browser task to be executed in internal browser.
+   * 
+   * @param task browser task
+   * @return true if the browser task is successfully accepted, otherwise false
+   */
+  public boolean registerInternalBrowserTask(ActionComposer task) {
+    if (controller != null) {
+      return controller.acceptBrowserTask(task);
+    } else {
+      throw new RuntimeException("No assocaited job controller available");
+    }
+  }
+  
+  /**
+   * Await external interaction from job controller.
+   */
+  public void awaitInteraction() {
+    if (controller != null) {
+      controller.awaitInteraction();
+    } else {
+      throw new RuntimeException("No assocaited job controller available");
+    }
+  }
+  
+  /**
+   * Get the latest interaction from job controller.
+   * 
+   * @return the latest interaction
+   */
+  public InteractionType getLatestInteraction() {
+    if (controller != null) {
+      return controller.getLatestInteraction();
+    } else {
+      throw new RuntimeException("No assocaited job controller available");
+    }
   }
 
   /**
    * Get the name of this job.
    * @return job name
    */
-  public String getJobName() {
+  public final String getJobName() {
     return jobName;
   }
 }

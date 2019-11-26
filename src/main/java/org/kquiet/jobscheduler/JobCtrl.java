@@ -20,6 +20,7 @@ import java.lang.reflect.Constructor;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,18 +55,15 @@ public class JobCtrl {
   private final SystemConfig configInfo = ConfigCache.getOrCreate(SystemConfig.class);
   private volatile ActionRunner actionRunner;
   private final Phaser interactionPhaser;
-  private volatile boolean positiveInteractionFlag;
+  private volatile InteractionType latestInteractionType;
   private Runnable preInteractionFunc;
   private Runnable postInteractionFunc;
-  private final PausableScheduledThreadPoolExecutor timerExecutor;
-  private volatile boolean isPaused = false;
-  private volatile boolean resumableAutomatically = true;
+  private final PausableScheduledThreadPoolExecutor jobExecutor;
+  private final Map<PauseTarget, PauseConfig> pauseConfigMap = new HashMap<>();
   private final List<JobBase> scheduleJobList = new ArrayList<>();
   private final Map<String, ScheduledFuture<?>> scheduledTask = new LinkedHashMap<>();
   private volatile boolean scheduled = false;
 
-  private Runnable pauseDelegate = null;
-  private Runnable resumeDelegate = null;
   private Consumer<String> executingJobDescriptionConsumer = null; 
 
   /**
@@ -74,12 +72,14 @@ public class JobCtrl {
   public JobCtrl() {
     actionRunner = createNewActionRunner();
     int parallelism = configInfo.jobParallelism();
-    timerExecutor = new PausableScheduledThreadPoolExecutor("CtrlTimerExecutor", parallelism);
-    timerExecutor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
-    timerExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-    timerExecutor.setRemoveOnCancelPolicy(true);
+    jobExecutor = new PausableScheduledThreadPoolExecutor("CtrlJobExecutor", parallelism);
+    jobExecutor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+    jobExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+    jobExecutor.setRemoveOnCancelPolicy(true);
     interactionPhaser = new Phaser(1);
     LOGGER.info("[Ctrl] Job Parallelism:{}", parallelism);
+    pauseConfigMap.put(PauseTarget.Browser, new PauseConfig());
+    pauseConfigMap.put(PauseTarget.JobExecutor, new PauseConfig());
   }
 
   private void scheduleJobs(Iterable<JobBase> jobs) {
@@ -90,16 +90,16 @@ public class JobCtrl {
       if (!scheduledTask.containsKey(impl.getJobName())) {
         JobConfig config = impl.getTimerConfig();
         long interval = config.interval();
-        LocalDateTime initDateTime = impl.getNextFireDateTime(now);
+        LocalDateTime initDateTime = impl.calculateNextFireDateTime(now);
 
         if (initDateTime != null) {
           long initialDelay = ChronoUnit.MILLIS.between(now, initDateTime);
           Runnable toRun = compileJob(impl, interval);
           if (config.scheduleAfterExec()) {
-            scheduledTask.put(impl.getJobName(), timerExecutor.scheduleWithFixedDelay(toRun,
+            scheduledTask.put(impl.getJobName(), jobExecutor.scheduleWithFixedDelay(toRun,
                 initialDelay, interval * 1000, TimeUnit.MILLISECONDS));
           } else {
-            scheduledTask.put(impl.getJobName(), timerExecutor.scheduleAtFixedRate(toRun,
+            scheduledTask.put(impl.getJobName(), jobExecutor.scheduleAtFixedRate(toRun,
                 initialDelay, interval * 1000, TimeUnit.MILLISECONDS));
           }
           scheduleJobList.add(impl);
@@ -216,127 +216,165 @@ public class JobCtrl {
    */
   public void stop() {
     try {
-      timerExecutor.shutdown();
+      jobExecutor.shutdown();
       if (actionRunner != null) {
         actionRunner.close();
       }
       scheduledTask.clear();
     } catch (Exception ex) {
       LOGGER.error("[Ctrl] stop fail", ex);
-    } finally {
-      isPaused = false;
     }
   }
 
   /**
-   * Pause the execution of all managed jobs and internal browser.
+   * Pause the execution of specified target.
    * 
-   * @param resumableAutomatically indicate whether this pause could be resumed automatically
+   * @param target the target to pause
+   * @param autoResumable indicate whether this pause could be resumed automatically
    * @return true if paused, otherwise false
    */
-  public synchronized boolean pause(boolean resumableAutomatically) {
-    if (isPaused) {
+  public synchronized boolean pause(PauseTarget target, boolean autoResumable) {
+    if (target == null || !pauseConfigMap.containsKey(target)) {
       return false;
     }
-
+    
+    PauseConfig pauseConfig = pauseConfigMap.get(target);    
+    if (pauseConfig.isPaused) {
+      return false;
+    }
+    
     try {
-      if (this.actionRunner != null) {
-        this.actionRunner.pause();
+      switch (target)  {
+        case Browser:
+          if (this.actionRunner != null) {
+            this.actionRunner.pause();
+            LOGGER.info("[Ctrl] Bowser paused");
+          }
+          break;
+        case JobExecutor:
+          if (this.jobExecutor != null) {
+            this.jobExecutor.pause();
+            LOGGER.info("[Ctrl] JobExecutor paused");
+          }
+          break;
+        default:
+          break;
       }
-
-      if (this.timerExecutor != null) {
-        this.timerExecutor.pause();
-      }
-
+      
       try {
-        if (this.pauseDelegate != null) {
-          this.pauseDelegate.run();
+        if (pauseConfig.afterPauseFunc != null) {
+          pauseConfig.afterPauseFunc.run();
         }
       } catch (Exception ex) {
-        LOGGER.error("[Ctrl] pause delegate error", ex);
+        LOGGER.error("[Ctrl] error after pause({})", target.toString(), ex);
       }
-
+      
       for (JobBase impl: scheduleJobList) {
         try {
           impl.pause();
         } catch (Exception ex) {
-          LOGGER.error("[Ctrl] job {} pause delegate error", impl.getJobName(), ex);
+          LOGGER.error("[Ctrl] job({}) pause error", impl.getJobName(), ex);
         }
       }
     } finally {
-      this.resumableAutomatically = this.resumableAutomatically && resumableAutomatically;
-      isPaused = true;
+      pauseConfig.autoResumable = pauseConfig.autoResumable && autoResumable;
+      pauseConfig.isPaused = true;
     }
     return true;
   }
-
-  public synchronized boolean pause() {
-    return pause(false);
+  
+  public synchronized boolean pause(PauseTarget target) {
+    return pause(target, false);
   }
 
   /**
-   * Resume the execution of all managed jobs and internal browser.
+   * Resume the execution of specified target.
    * 
-   * @param resumeAutomatically indicate whether this resume is automatically or manually
+   * @param target the target to resume
+   * @param autoResumable indicate whether this resume is automatically or manually
    * @return true if resumed, otherwise false
    */
-  public synchronized boolean resume(boolean resumeAutomatically) {
-    if (!isPaused) {
+  public synchronized boolean resume(PauseTarget target, boolean autoResumable) {
+    if (target == null || !pauseConfigMap.containsKey(target)) {
+      return false;
+    }
+    
+    PauseConfig pauseConfig = pauseConfigMap.get(target);
+    if (!pauseConfig.isPaused) {
       return false;
     }
 
-    if (resumeAutomatically && !this.resumableAutomatically) {
-      LOGGER.info("[Ctrl] Can't resume automatically because system was paused by user"
-          + ", please resume manually");
+    if (autoResumable && !pauseConfig.autoResumable) {
+      LOGGER.info("[Ctrl] Can't resume " + target.toString()
+          + " automatically because system was paused by user, please resume manually");
       return false;
     }
 
     try {
-      if (this.actionRunner != null) {
-        this.actionRunner.resume();
-      }
-
-      if (this.timerExecutor != null) {
-        this.timerExecutor.resume();
+      switch (target)  {
+        case Browser:
+          if (this.actionRunner != null) {
+            this.actionRunner.resume();
+            LOGGER.info("[Ctrl] Browser resumed");
+          }
+          break;
+        case JobExecutor:
+          if (this.jobExecutor != null) {
+            this.jobExecutor.resume();
+            LOGGER.info("[Ctrl] JobExecutor resumed");
+          }
+          break;
+        default:
+          break;
       }
 
       try {
-        if (this.resumeDelegate != null) {
-          this.resumeDelegate.run();
+        if (pauseConfig.afterResumeFunc != null) {
+          pauseConfig.afterResumeFunc.run();
         }
       } catch (Exception ex) {
-        LOGGER.error("resume delegate error", ex);
+        LOGGER.error("[Ctrl] error after resume({})", target.toString(), ex);
       }
-
+      
       for (JobBase impl: scheduleJobList) {
         try {
           impl.resume();
         } catch (Exception ex) {
-          LOGGER.error("[Ctrl] job {} resume delegate error", impl.getJobName(), ex);
+          LOGGER.error("[Ctrl] job({}) resume error", impl.getJobName(), ex);
         }
       }
     } finally {
-      isPaused = false;
-      this.resumableAutomatically = true;  //reset
+      pauseConfig.isPaused = false;
+      pauseConfig.autoResumable = true;  //reset
     }
     return true;
   }
-
-  public synchronized boolean resume() {
-    return resume(false);
-  }
-
-  public synchronized boolean isPaused() {
-    return isPaused;
+  
+  public synchronized boolean resume(PauseTarget target) {
+    return resume(target, false);
   }
 
   /**
-   * Signal the interaction result.
+   * Check if the specified target has already paused.
    * 
-   * @param isPositive true if the result is positive, otherwise false
+   * @param target the target to check
+   * @return true if paused, otherwise false
    */
-  public void signalInteractionResult(boolean isPositive) {
-    this.positiveInteractionFlag = isPositive;
+  public synchronized boolean isPaused(PauseTarget target) {
+    if (target == null || !pauseConfigMap.containsKey(target)) {
+      return false;
+    }
+    PauseConfig pauseConfig = pauseConfigMap.get(target);
+    return pauseConfig.isPaused;
+  }
+
+  /**
+   * Signal the interaction type.
+   * 
+   * @param interaction the interaction type
+   */
+  public void signalInteractionType(InteractionType interaction) {
+    this.latestInteractionType = interaction;
     this.interactionPhaser.arrive();        
   }
 
@@ -363,20 +401,27 @@ public class JobCtrl {
   }
 
   /**
-   * Set the delegate function to execute before pause.
+   * Set the function to execute after pause.
    * 
-   * @param pauseDelegate the pauseDelegate to set
+   * @param target the target to pause
+   * @param afterPauseFunc the pauseDelegate to set
    */
-  public synchronized void setPauseDelegate(Runnable pauseDelegate) {
-    this.pauseDelegate = pauseDelegate;
+  public synchronized void setAfterPauseFunc(PauseTarget target, Runnable afterPauseFunc) {
+    if (target != null && pauseConfigMap.containsKey(target)) {
+      pauseConfigMap.get(target).afterPauseFunc = afterPauseFunc;
+    }
   }
 
   /**
-   * Set the delegate function to execute before resume.
-   * @param resumeDelegate the resumeDelegate to set
+   * Set the function to execute after resume.
+   * 
+   * @param target the target to resume
+   * @param afterResumeFunc the resumeDelegate to set
    */
-  public synchronized void setResumeDelegate(Runnable resumeDelegate) {
-    this.resumeDelegate = resumeDelegate;
+  public synchronized void setAfterResumeFunc(PauseTarget target, Runnable afterResumeFunc) {
+    if (target != null && pauseConfigMap.containsKey(target)) {
+      pauseConfigMap.get(target).afterResumeFunc = afterResumeFunc;
+    }
   }
 
   private ActionRunner createNewActionRunner() {
@@ -396,19 +441,25 @@ public class JobCtrl {
    * @return true if the browser task is successfully accepted, otherwise false
    */
   public boolean acceptBrowserTask(ActionComposer task) {
-    if (actionRunner == null) {
+    if (actionRunner == null || task == null) {
       return false;
     }
 
-    try {
-      if (!actionRunner.isBrowserAlive()) {
-        restartBrowserTaskManager();
+    synchronized (actionRunner) {
+      if (actionRunner == null) {
+        return false;
       }
-      actionRunner.executeComposer(task);
-      return true;
-    } catch (Exception ex) {
-      LOGGER.error("[Ctrl] accept task fail", ex);
-      return false;
+      
+      try {
+        if (!actionRunner.isBrowserAlive()) {
+          restartBrowserTaskManager();
+        }
+        actionRunner.executeComposer(task);
+        return true;
+      } catch (Exception ex) {
+        LOGGER.error("[Ctrl] accept task fail", ex);
+        return false;
+      }
     }
   }
 
@@ -416,21 +467,28 @@ public class JobCtrl {
    * Close current internal browser and recreate a new one.
    */
   public synchronized void restartBrowserTaskManager() {
-    try {
-      if (actionRunner != null) {
-        actionRunner.close();
-      }
-      LOGGER.info("[Ctrl] browser task manger closed");
-    } catch (Exception ex) {
-      LOGGER.error("[Ctrl] Close browser error", ex);
+    if (actionRunner == null) {
+      return;
     }
-    actionRunner = createNewActionRunner();
+    synchronized (actionRunner) {
+      if (actionRunner == null) {
+        return;
+      }
+      
+      try {
+        actionRunner.close();
+        LOGGER.info("[Ctrl] browser task manger closed");
+      } catch (Exception ex) {
+        LOGGER.error("[Ctrl] Close browser error", ex);
+      }
+      actionRunner = createNewActionRunner();
+    }
   }
   
   /**
-   * Await the interaction result.
+   * Await the external interaction.
    */
-  public void awaitInteractionResult() {
+  public void awaitInteraction() {
     int phaseNo = interactionPhaser.getPhase();
     if (preInteractionFunc != null) {
       try {
@@ -443,7 +501,7 @@ public class JobCtrl {
     try {
       interactionPhaser.awaitAdvanceInterruptibly(phaseNo);
     } catch (InterruptedException e) {
-      LOGGER.info("[Ctrl] awaiting interaction result interrupted");
+      LOGGER.info("[Ctrl] awaiting interaction result...");
     }
     
     if (postInteractionFunc != null) {
@@ -456,16 +514,16 @@ public class JobCtrl {
   }
 
   /**
-   * Get the interaction result.
+   * Get the latest interaction.
    * 
-   * @return the positiveInteractionFlag true if positive, otherwise false
+   * @return the latest interaction
    */
-  public boolean isPositiveInteraction() {
-    return positiveInteractionFlag;
+  public InteractionType getLatestInteraction() {
+    return latestInteractionType;
   }
 
   /**
-   * Set the function to be executed before awaiting interaction result.
+   * Set the function to be executed before awaiting interaction.
    * @param func the function to set
    */
   public void setPreInteractionFunction(Runnable func) {
@@ -473,7 +531,7 @@ public class JobCtrl {
   }
 
   /**
-   * Set the function to be executed after awaiting interaction result.
+   * Set the function to be executed after awaiting interaction.
    * @param func the function to set
    */
   public void setPostInteractionFunction(Runnable func) {
@@ -494,5 +552,20 @@ public class JobCtrl {
    */
   public void setExecutingJobDescriptionConsumer(Consumer<String> executingJobDescriptionConsumer) {
     this.executingJobDescriptionConsumer = executingJobDescriptionConsumer;
+  }
+  
+  private class PauseConfig {
+    private volatile boolean isPaused = false;
+    private volatile boolean autoResumable = true;
+    private Runnable afterPauseFunc = null;
+    private Runnable afterResumeFunc = null;
+  }
+  
+  public enum PauseTarget {
+    Browser, JobExecutor;
+  }
+  
+  public enum InteractionType {
+    Positive, Negative;
   }
 }

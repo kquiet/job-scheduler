@@ -21,19 +21,22 @@ import ch.qos.logback.classic.LoggerContext;
 
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JFrame;
+import javax.swing.JMenu;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import org.aeonbits.owner.ConfigCache;
-
 import org.kquiet.concurrent.PausableScheduledThreadPoolExecutor;
+import org.kquiet.jobscheduler.JobCtrl.InteractionType;
+import org.kquiet.jobscheduler.JobCtrl.PauseTarget;
 import org.kquiet.jobscheduler.util.JTextAreaLogAppender;
 import org.kquiet.jobscheduler.util.TimeUtility;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,16 +45,16 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Kimberly
  */
-public class DashboardJFrame extends javax.swing.JFrame {
+public class MonitorFrame extends javax.swing.JFrame {
   private static final long serialVersionUID = 1L;
-  private static final Logger LOGGER = LoggerFactory.getLogger(DashboardJFrame.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MonitorFrame.class);
 
   private final LocalDateTime initTime = LocalDateTime.now();
   private SystemConfig configInfo = null;
   private transient JobCtrl controller = null;
   private transient PausableScheduledThreadPoolExecutor timerExecutor = null;
 
-  public DashboardJFrame() {
+  public MonitorFrame() {
     initComponents();
   }
 
@@ -75,7 +78,7 @@ public class DashboardJFrame extends javax.swing.JFrame {
     jtextAreaMisc = new javax.swing.JTextArea();
     jbuttonCancel = new javax.swing.JButton();
     jmenuBarMain = new javax.swing.JMenuBar();
-    jmenuPause = new javax.swing.JMenu();
+    jmenuPauseJobExecutor = new javax.swing.JMenu();
     jmenuClear = new javax.swing.JMenu();
 
     setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -154,20 +157,47 @@ public class DashboardJFrame extends javax.swing.JFrame {
 
     jtabbedPaneMain.addTab("Misc.", jscrollPaneMisc);
 
-    jmenuPause.setText("Pause");
-    jmenuPause.addMouseListener(new java.awt.event.MouseAdapter() {
+    jmenuPauseJobExecutor.setText("PauseJobExecutor");
+    jmenuPauseJobExecutor.addMouseListener(new java.awt.event.MouseAdapter() {
       public void mouseClicked(java.awt.event.MouseEvent evt) {
-        jmenuPauseMouseClicked(evt);
+        if (controller.isPaused(PauseTarget.JobExecutor)) {
+          changePageStatus(PageStatus.JobExecutorResumed);
+        } else {
+          changePageStatus(PageStatus.JobExecutorPaused);
+        }
       }
     });
-    jmenuBarMain.add(jmenuPause);
+    jmenuBarMain.add(jmenuPauseJobExecutor);
 
     jmenuClear.setText("Clear");
     jmenuClear.addMouseListener(new java.awt.event.MouseAdapter() {
       public void mouseClicked(java.awt.event.MouseEvent evt) {
-        jmenuClearMouseClicked(evt);
+        try {
+          SwingUtilities.invokeLater(() -> {
+            jtextAreaInfoLog.setText(null);
+            jtextAreaErrorLog.setText(null);
+            jtextAreaDebugLog.setText(null);
+            jtextAreaMisc.setText(null);
+          });
+          LOGGER.info("[GUI] JTextArea log cleared");
+        } catch (Exception ex) {
+          LOGGER.error("[GUI] clear JTextArea log fail", ex);
+        }
       }
     });
+    
+    jmenuPauseBrowser = new JMenu("PauseBrowser");
+    jmenuPauseBrowser.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        if (controller.isPaused(PauseTarget.Browser)) {
+          changePageStatus(PageStatus.BrowserResumed);
+        } else {
+          changePageStatus(PageStatus.BrowserPaused);
+        }
+      }
+    });
+    jmenuBarMain.add(jmenuPauseBrowser);
     jmenuBarMain.add(jmenuClear);
 
     setJMenuBar(jmenuBarMain);
@@ -202,63 +232,53 @@ public class DashboardJFrame extends javax.swing.JFrame {
     //GEN-FIRST:event_jButtonSubmitActionPerformed
     jbuttonPositive.setEnabled(false);
     jbuttonCancel.setEnabled(false);
-    controller.signalInteractionResult(true);
+    controller.signalInteractionType(InteractionType.Positive);
   } //GEN-LAST:event_jButtonSubmitActionPerformed
 
   private void jbuttonCancelActionPerformed(java.awt.event.ActionEvent evt) {
     //GEN-FIRST:event_jButtonCancelActionPerformed
     jbuttonCancel.setEnabled(false);
     jbuttonPositive.setEnabled(false);
-    controller.signalInteractionResult(false);
+    controller.signalInteractionType(InteractionType.Negative);
   } //GEN-LAST:event_jButtonCancelActionPerformed
 
-  private void jmenuClearMouseClicked(java.awt.event.MouseEvent evt) {
-    //GEN-FIRST:event_jMenuClearMouseClicked
-    try {
-      SwingUtilities.invokeLater(() -> {
-        jtextAreaInfoLog.setText(null);
-        jtextAreaErrorLog.setText(null);
-        jtextAreaDebugLog.setText(null);
-        jtextAreaMisc.setText(null);
-      });
-      LOGGER.info("[Event] JTextArea log cleared");
-    } catch (Exception ex) {
-      LOGGER.error("[Event] clear JTextArea log fail", ex);
-    }
-  } //GEN-LAST:event_jMenuClearMouseClicked
-
-  private void jmenuPauseMouseClicked(java.awt.event.MouseEvent evt) {
-    //GEN-FIRST:event_jMenuPauseMouseClicked
-    if (controller.isPaused()) {
-      changePageStatus(PageStatus.Resumed);
-    } else {
-      changePageStatus(PageStatus.Paused);
-    }
-  } //GEN-LAST:event_jMenuPauseMouseClicked
-
   private enum PageStatus {
-    Running, Paused, Resumed
+    Running, JobExecutorPaused, JobExecutorResumed, BrowserPaused, BrowserResumed
   }
   
   private void changePageStatus(PageStatus newStatus) {
     switch (newStatus) {
       default:
         break;
-      case Resumed:
+      case JobExecutorResumed:
         SwingUtilities.invokeLater(() -> {
-          if (controller.isPaused()) {
-            controller.resume();
-            jmenuPause.setText("Pause");
-            LOGGER.info("[Event] system resumed");
+          if (controller.isPaused(PauseTarget.JobExecutor)) {
+            controller.resume(PauseTarget.JobExecutor);
+            jmenuPauseJobExecutor.setText("PauseJobExecutor");
           }
         });
         break;
-      case Paused:
+      case JobExecutorPaused:
         SwingUtilities.invokeLater(() -> {
-          if (!controller.isPaused()) {
-            controller.pause();
-            jmenuPause.setText("Resume");
-            LOGGER.info("[Event] system paused");
+          if (!controller.isPaused(PauseTarget.JobExecutor)) {
+            controller.pause(PauseTarget.JobExecutor);
+            jmenuPauseJobExecutor.setText("ResumeJobExecutor");
+          }
+        });
+        break;
+      case BrowserResumed:
+        SwingUtilities.invokeLater(() -> {
+          if (controller.isPaused(PauseTarget.Browser)) {
+            controller.resume(PauseTarget.Browser);
+            jmenuPauseBrowser.setText("PauseBowser");
+          }
+        });
+        break;
+      case BrowserPaused:
+        SwingUtilities.invokeLater(() -> {
+          if (!controller.isPaused(PauseTarget.Browser)) {
+            controller.pause(PauseTarget.Browser);
+            jmenuPauseBrowser.setText("ResumeBowser");
           }
         });
         break;
@@ -270,10 +290,10 @@ public class DashboardJFrame extends javax.swing.JFrame {
    */
   public void releaseResources() {
     try {
-      LOGGER.info("[Event] Releasing all resources...");
+      LOGGER.info("[GUI] Releasing all resources...");
       controller.stop();
       timerExecutor.shutdown();
-      LOGGER.info("[Event] All resources released");
+      LOGGER.info("[GUI] All resources released");
     } catch (Exception ex) {
       ex.printStackTrace(System.out);
     } finally {
@@ -291,7 +311,7 @@ public class DashboardJFrame extends javax.swing.JFrame {
         this.setTitle(title + since);
       });
     } catch (Exception ex) {
-      LOGGER.error("[View] set frame title error", ex);
+      LOGGER.error("[GUI] set frame title error", ex);
     }
   }
   
@@ -326,22 +346,29 @@ public class DashboardJFrame extends javax.swing.JFrame {
     });
     controller.setPreInteractionFunction(() -> {
       SwingUtilities.invokeLater(() -> {
-        //enable only when in interactive mode
-        if (configInfo.interactiveFlag()) {
-          jbuttonPositive.setEnabled(true);
-          jbuttonCancel.setEnabled(true);
-          jtabbedPaneMain.setSelectedIndex(jtabbedPaneMain.getTabCount() - 1);
-        }
+        jbuttonPositive.setEnabled(true);
+        jbuttonCancel.setEnabled(true);
+        jtabbedPaneMain.setSelectedIndex(jtabbedPaneMain.getTabCount() - 1);
       });
     });
-    controller.setPauseDelegate(() -> {
+    controller.setAfterPauseFunc(PauseTarget.Browser, () -> {
       SwingUtilities.invokeLater(() -> {
-        jmenuPause.setText("Resume");
+        jmenuPauseBrowser.setText("ResumeBrowser");
       });
     });
-    controller.setResumeDelegate(() -> {
+    controller.setAfterResumeFunc(PauseTarget.Browser, () -> {
       SwingUtilities.invokeLater(() -> {
-        jmenuPause.setText("Pause");
+        jmenuPauseBrowser.setText("PauseBrowser");
+      });
+    });
+    controller.setAfterPauseFunc(PauseTarget.JobExecutor, () -> {
+      SwingUtilities.invokeLater(() -> {
+        jmenuPauseJobExecutor.setText("ResumeJobExecutor");
+      });
+    });
+    controller.setAfterResumeFunc(PauseTarget.JobExecutor, () -> {
+      SwingUtilities.invokeLater(() -> {
+        jmenuPauseJobExecutor.setText("PauseJobExecutor");
       });
     });
     controller.start();
@@ -358,7 +385,7 @@ public class DashboardJFrame extends javax.swing.JFrame {
         jtextAreaDebugLog.setText(null);
         jtextAreaMisc.setText(null);
       });
-      LOGGER.info("[View] clearn JTextAreaLog every {} seconds", logClearInterval);
+      LOGGER.info("[GUI] clearn JTextAreaLog every {} seconds", logClearInterval);
     }, logClearInterval, logClearInterval, TimeUnit.SECONDS);
   }
 
@@ -384,7 +411,7 @@ public class DashboardJFrame extends javax.swing.JFrame {
   private javax.swing.JButton jbuttonPositive;
   private javax.swing.JMenuBar jmenuBarMain;
   private javax.swing.JMenu jmenuClear;
-  private javax.swing.JMenu jmenuPause;
+  private javax.swing.JMenu jmenuPauseJobExecutor;
   private javax.swing.JPanel jpanelMisc;
   private javax.swing.JScrollPane jscrollPaneDebugLog;
   private javax.swing.JScrollPane jscrollPaneErrorLog;
@@ -397,5 +424,6 @@ public class DashboardJFrame extends javax.swing.JFrame {
   private javax.swing.JTextArea jtextAreaInfoLog;
   private javax.swing.JTextArea jtextAreaMisc;
   private GridBagConstraints gridBagConstraints2;
+  private JMenu jmenuPauseBrowser;
   // End of variables declaration//GEN-END:variables
 }

@@ -56,10 +56,6 @@ public interface SystemConfig extends Reloadable {
   @Config.Key("instanceName")
   String instanceName();
 
-  @Config.Key("interactiveFlag")
-  @DefaultValue("false")
-  boolean interactiveFlag();
-
   @Config.Key("browser.type")
   @DefaultValue("")
   String browserType();

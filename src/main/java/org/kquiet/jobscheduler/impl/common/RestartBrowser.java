@@ -36,7 +36,7 @@ public class RestartBrowser extends JobBase {
 
   @Override
   protected void doJob() {
-    this.getController().restartBrowserTaskManager();
+    restartInternalBrowser();
   }
 
   @Override
