@@ -5,7 +5,7 @@ RUN echo '@edgetesting http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /et
  && apk add dbus-x11 fontconfig tzdata pptpclient@edgetesting \
  && mkdir -p /usr/share/fonts \
  && wget https://github.com/googlei18n/noto-cjk/raw/master/NotoSansCJK-Regular.ttc -O /usr/share/fonts/NotoSansCJK-Regular.ttc \
- && mkdir -p /opt/kquiet/${project.artifactId} \
+ && mkdir -p /opt/kquiet/${project.artifactId}/ext \
  && apk add 'chromium>70' 'chromium-chromedriver>70' \
  && ln -s /usr/bin/chromedriver /opt/kquiet/${project.artifactId}/chromedriver \
  && rm -rf /usr/share/fonts/TTF/ \
