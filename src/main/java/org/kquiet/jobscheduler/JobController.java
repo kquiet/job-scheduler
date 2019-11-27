@@ -49,27 +49,27 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Kimberly
  */
-public class JobCtrl {
-  private static final Logger LOGGER = LoggerFactory.getLogger(JobCtrl.class);
+public class JobController {
+  private static final Logger LOGGER = LoggerFactory.getLogger(JobController.class);
 
   private final SystemConfig configInfo = ConfigCache.getOrCreate(SystemConfig.class);
   private volatile ActionRunner actionRunner;
   private final Phaser interactionPhaser;
   private volatile InteractionType latestInteractionType;
-  private Runnable preInteractionFunc;
-  private Runnable postInteractionFunc;
+  private volatile Runnable preInteractionFunc;
+  private volatile Runnable postInteractionFunc;
   private final PausableScheduledThreadPoolExecutor jobExecutor;
   private final Map<PauseTarget, PauseConfig> pauseConfigMap = new HashMap<>();
   private final List<JobBase> scheduleJobList = new ArrayList<>();
   private final Map<String, ScheduledFuture<?>> scheduledTask = new LinkedHashMap<>();
   private volatile boolean scheduled = false;
 
-  private Consumer<String> executingJobDescriptionConsumer = null; 
+  private volatile Consumer<String> executingJobDescriptionConsumer = null; 
 
   /**
    * Create a new job controller.
    */
-  public JobCtrl() {
+  public JobController() {
     actionRunner = createNewActionRunner();
     int parallelism = configInfo.jobParallelism();
     jobExecutor = new PausableScheduledThreadPoolExecutor("CtrlJobExecutor", parallelism);
@@ -131,27 +131,17 @@ public class JobCtrl {
 
         if (getExecutingJobDescriptionConsumer() != null) {
           try {
-            getExecutingJobDescriptionConsumer().accept(jobToRun.ping());
+            getExecutingJobDescriptionConsumer().accept(jobToRun.getJobName());
           } catch (Exception ex) {
             LOGGER.error("[Scheduler] {} executingJobDescriptionDelegate exception:",
                 jobToRun.getJobName(), ex);
           }
         }
 
-        //check & do
-        boolean bizFlag = false;
         try {
-          bizFlag = jobToRun.checkBizToDo();
-          LOGGER.info("[Scheduler] {} checkBizToDo:{}", jobToRun.getJobName(), bizFlag);
-        } catch (Exception ex)  {
-          LOGGER.error("[Scheduler] {} checkBizToDo exception:", jobToRun.getJobName(), ex);
-        }
-        if (bizFlag) {
-          try {
-            jobToRun.doJob();
-          } catch (Exception ex) {
-            LOGGER.error("[Scheduler] {} doJob exception:", jobToRun.getJobName(), ex);
-          }
+          jobToRun.run();
+        } catch (Exception ex) {
+          LOGGER.error("[Scheduler] {} doJob exception:", jobToRun.getJobName(), ex);
         }
 
         if (config.scheduleAfterExec()) {
@@ -177,8 +167,8 @@ public class JobCtrl {
       String implName = jobConfig.getValue().implementName();
       try {
         Class<?> implClass = Class.forName(implName);
-        Constructor<?> implConstructor = implClass.getConstructor(String.class, JobCtrl.class);
-        jobList.add((JobBase)implConstructor.newInstance(jobName, this));
+        Constructor<?> implConstructor = implClass.getConstructor(String.class);
+        jobList.add(((JobBase)implConstructor.newInstance(jobName)).setJobController(this));
       } catch (Exception ex) {
         LOGGER.error("Can't instantiate job class:{},{}", jobName, implName, ex);
       }
@@ -406,7 +396,7 @@ public class JobCtrl {
    * @param target the target to pause
    * @param afterPauseFunc the pauseDelegate to set
    */
-  public synchronized void setAfterPauseFunc(PauseTarget target, Runnable afterPauseFunc) {
+  public void setAfterPauseFunction(PauseTarget target, Runnable afterPauseFunc) {
     if (target != null && pauseConfigMap.containsKey(target)) {
       pauseConfigMap.get(target).afterPauseFunc = afterPauseFunc;
     }
@@ -418,7 +408,7 @@ public class JobCtrl {
    * @param target the target to resume
    * @param afterResumeFunc the resumeDelegate to set
    */
-  public synchronized void setAfterResumeFunc(PauseTarget target, Runnable afterResumeFunc) {
+  public void setAfterResumeFunction(PauseTarget target, Runnable afterResumeFunc) {
     if (target != null && pauseConfigMap.containsKey(target)) {
       pauseConfigMap.get(target).afterResumeFunc = afterResumeFunc;
     }
@@ -466,7 +456,7 @@ public class JobCtrl {
   /**
    * Close current internal browser and recreate a new one.
    */
-  public synchronized void restartBrowserTaskManager() {
+  public void restartBrowserTaskManager() {
     if (actionRunner == null) {
       return;
     }
@@ -557,8 +547,8 @@ public class JobCtrl {
   private class PauseConfig {
     private volatile boolean isPaused = false;
     private volatile boolean autoResumable = true;
-    private Runnable afterPauseFunc = null;
-    private Runnable afterResumeFunc = null;
+    private volatile Runnable afterPauseFunc = null;
+    private volatile Runnable afterResumeFunc = null;
   }
   
   public enum PauseTarget {

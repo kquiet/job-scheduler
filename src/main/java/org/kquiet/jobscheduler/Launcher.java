@@ -46,7 +46,7 @@ public class Launcher {
         MonitorFrame launchedObj = new MonitorFrame();
         launchedObj.setVisible(true);
       } else {
-        JobCtrl controller = new JobCtrl();
+        JobController controller = new JobController();
         controller.start();
       }
     } catch (Exception ex) {

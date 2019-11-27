@@ -17,7 +17,6 @@
 package org.kquiet.jobscheduler.impl.common;
 
 import org.kquiet.jobscheduler.JobBase;
-import org.kquiet.jobscheduler.JobCtrl;
 
 /**
  * Restart internal browser of associated job controller.
@@ -25,22 +24,12 @@ import org.kquiet.jobscheduler.JobCtrl;
  * @author Kimberly
  */
 public class RestartBrowser extends JobBase {
-  public RestartBrowser(String jobName, JobCtrl ctrl) {
-    super(jobName, ctrl);
+  public RestartBrowser(String jobName) {
+    super(jobName);
   }
 
   @Override
-  protected boolean checkBizToDo() {
-    return true;
-  }
-
-  @Override
-  protected void doJob() {
+  public void run() {
     restartInternalBrowser();
-  }
-
-  @Override
-  protected String ping() {
-    return getJobName();
   }
 }

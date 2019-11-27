@@ -36,7 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.kquiet.jobscheduler.JobBase;
-import org.kquiet.jobscheduler.JobCtrl;
+import org.kquiet.jobscheduler.JobController;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,9 +69,11 @@ public class ControllerTest {
   public void customJobTest() {
     CountDownLatch latch = new CountDownLatch(2);
     List<String> parameterValueList = Collections.synchronizedList(new ArrayList<>());
-    JobCtrl controller = new JobCtrl();
-    TestJobBase job1 = new TestJobBase("TestJob1", controller, latch, parameterValueList);
-    TestJobBase job2 = new TestJobBase("TestJob2", controller, latch, parameterValueList);
+    JobController controller = new JobController();
+    TestJobBase job1 = new TestJobBase("TestJob1", latch, parameterValueList);
+    TestJobBase job2 = new TestJobBase("TestJob2", latch, parameterValueList);
+    job1.setJobController(controller);
+    job2.setJobController(controller);
     controller.start(Arrays.asList(job2, job1));
 
     boolean temp = false;
@@ -100,24 +102,15 @@ public class ControllerTest {
     private CountDownLatch latch = null;
     private List<String> parameterValueList = null;
 
-    public TestJobBase(String jobName, JobCtrl ctrl) {
-      super(jobName, ctrl);
-    }
-
-    public TestJobBase(String jobName, JobCtrl ctrl, CountDownLatch latch,
+    public TestJobBase(String jobName, CountDownLatch latch,
         List<String> parameterValueList) {
-      super(jobName, ctrl);
+      super(jobName);
       this.latch = latch;
       this.parameterValueList = parameterValueList;
     }
 
     @Override
-    protected boolean checkBizToDo() {
-      return true;
-    }
-
-    @Override
-    protected void doJob() {
+    public void run() {
       LOGGER.info("[{}] starts", this.getJobName());
       try {
         Thread.sleep(2000);

@@ -18,12 +18,13 @@ package org.kquiet.jobscheduler;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 import org.aeonbits.owner.ConfigCache;
 import org.kquiet.browser.ActionComposer;
 import org.kquiet.concurrent.PausableThreadPoolExecutor;
-import org.kquiet.jobscheduler.JobCtrl.InteractionType;
-import org.kquiet.jobscheduler.JobCtrl.PauseTarget;
+import org.kquiet.jobscheduler.JobController.InteractionType;
+import org.kquiet.jobscheduler.JobController.PauseTarget;
 import org.kquiet.jobscheduler.SystemConfig.JobConfig;
 import org.kquiet.jobscheduler.util.TimeUtility;
 
@@ -36,30 +37,41 @@ import org.slf4j.LoggerFactory;
  *
  * @author Kimberly
  */
-public abstract class JobBase {
+public abstract class JobBase implements Runnable {
   private static final Logger LOGGER = LoggerFactory.getLogger(JobBase.class);
 
   private final SystemConfig systemConfig = ConfigCache.getOrCreate(SystemConfig.class);
-  private final JobCtrl controller;
+  private volatile JobController controller = null;
   private final String jobName;
   private final PausableThreadPoolExecutor eventExecutor;
   private volatile boolean isPaused = false;
 
   /**
-   * Create a new job.
-   * 
-   * @param jobName name of job
-   * @param ctrl associated job controller
+   * Create a new job with randomly generated name.
    */
-  public JobBase(String jobName, JobCtrl ctrl) {
-    this.jobName = jobName;
-    this.controller = ctrl;
+  public JobBase() {
+    this(UUID.randomUUID().toString());
+  }
+  
+  /**
+   * Create a new job with specified name.
+   * 
+   * @param jobName the name of job
+   */
+  public JobBase(String jobName) {
+    this.jobName = jobName;    
     this.eventExecutor = new PausableThreadPoolExecutor("EventExecutor-" + jobName, 1, 1);
   }
+  
+  public final JobBase setJobController(JobController ctrl) {
+    this.controller = ctrl;
+    return this;
+  }
 
-  protected abstract boolean checkBizToDo();
-
-  protected abstract void doJob();
+  /**
+   * The processing logic of job goes here.
+   */
+  public abstract void run();
 
   protected boolean pause() {
     if (isPaused) {
@@ -81,10 +93,6 @@ public abstract class JobBase {
       isPaused = false;
       return true;
     }
-  }
-
-  protected String ping() {
-    return "";
   }
 
   /**
@@ -143,7 +151,7 @@ public abstract class JobBase {
     return systemConfig.instanceName();
   }
 
-  protected final JobConfig getTimerConfig() {
+  public final JobConfig getTimerConfig() {
     return systemConfig.jobs().get(getJobName());
   }
 
@@ -165,7 +173,7 @@ public abstract class JobBase {
   /**
    * Restart internal browser of controlling job controller.
    */
-  public final void restartInternalBrowser() {    
+  protected final void restartInternalBrowser() {    
     if (controller != null) {
       controller.restartBrowserTaskManager();
     }
@@ -176,7 +184,7 @@ public abstract class JobBase {
    * Pause the execution of internal browser. All executing browser tasks will
    * remain running until they complete.
    */
-  public final void pauseInternalBrowser() {
+  protected final void pauseInternalBrowser() {
     if (controller != null) {
       controller.pause(PauseTarget.Browser);
     }
@@ -185,7 +193,7 @@ public abstract class JobBase {
   /**
    * Resume the execution of internal browser.
    */
-  public final void resumeInternalBrowser() {
+  protected final void resumeInternalBrowser() {
     if (controller != null) {
       controller.resume(PauseTarget.Browser);
     }
@@ -197,7 +205,7 @@ public abstract class JobBase {
    * @param task browser task
    * @return true if the browser task is successfully accepted, otherwise false
    */
-  public boolean registerInternalBrowserTask(ActionComposer task) {
+  protected final boolean registerInternalBrowserTask(ActionComposer task) {
     if (controller != null) {
       return controller.acceptBrowserTask(task);
     } else {
@@ -208,7 +216,7 @@ public abstract class JobBase {
   /**
    * Await external interaction from job controller.
    */
-  public void awaitInteraction() {
+  protected final void awaitInteraction() {
     if (controller != null) {
       controller.awaitInteraction();
     } else {
@@ -221,7 +229,7 @@ public abstract class JobBase {
    * 
    * @return the latest interaction
    */
-  public InteractionType getLatestInteraction() {
+  protected final InteractionType getLatestInteraction() {
     if (controller != null) {
       return controller.getLatestInteraction();
     } else {

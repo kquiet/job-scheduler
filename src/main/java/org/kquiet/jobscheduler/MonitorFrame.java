@@ -33,8 +33,8 @@ import javax.swing.SwingUtilities;
 
 import org.aeonbits.owner.ConfigCache;
 import org.kquiet.concurrent.PausableScheduledThreadPoolExecutor;
-import org.kquiet.jobscheduler.JobCtrl.InteractionType;
-import org.kquiet.jobscheduler.JobCtrl.PauseTarget;
+import org.kquiet.jobscheduler.JobController.InteractionType;
+import org.kquiet.jobscheduler.JobController.PauseTarget;
 import org.kquiet.jobscheduler.util.JTextAreaLogAppender;
 import org.kquiet.jobscheduler.util.TimeUtility;
 import org.slf4j.Logger;
@@ -51,7 +51,7 @@ public class MonitorFrame extends javax.swing.JFrame {
 
   private final LocalDateTime initTime = LocalDateTime.now();
   private SystemConfig configInfo = null;
-  private transient JobCtrl controller = null;
+  private transient JobController controller = null;
   private transient PausableScheduledThreadPoolExecutor timerExecutor = null;
 
   public MonitorFrame() {
@@ -340,7 +340,7 @@ public class MonitorFrame extends javax.swing.JFrame {
     this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
     //4. start timer worker
-    controller = new JobCtrl();
+    controller = new JobController();
     controller.setExecutingJobDescriptionConsumer((s) -> {
       refreshTitle(s);
     });
@@ -351,22 +351,22 @@ public class MonitorFrame extends javax.swing.JFrame {
         jtabbedPaneMain.setSelectedIndex(jtabbedPaneMain.getTabCount() - 1);
       });
     });
-    controller.setAfterPauseFunc(PauseTarget.Browser, () -> {
+    controller.setAfterPauseFunction(PauseTarget.Browser, () -> {
       SwingUtilities.invokeLater(() -> {
         jmenuPauseBrowser.setText("ResumeBrowser");
       });
     });
-    controller.setAfterResumeFunc(PauseTarget.Browser, () -> {
+    controller.setAfterResumeFunction(PauseTarget.Browser, () -> {
       SwingUtilities.invokeLater(() -> {
         jmenuPauseBrowser.setText("PauseBrowser");
       });
     });
-    controller.setAfterPauseFunc(PauseTarget.JobExecutor, () -> {
+    controller.setAfterPauseFunction(PauseTarget.JobExecutor, () -> {
       SwingUtilities.invokeLater(() -> {
         jmenuPauseJobExecutor.setText("ResumeJobExecutor");
       });
     });
-    controller.setAfterResumeFunc(PauseTarget.JobExecutor, () -> {
+    controller.setAfterResumeFunction(PauseTarget.JobExecutor, () -> {
       SwingUtilities.invokeLater(() -> {
         jmenuPauseJobExecutor.setText("PauseJobExecutor");
       });
