@@ -60,6 +60,10 @@ public interface SystemConfig extends Reloadable {
   @Config.Key("browser.type")
   @DefaultValue("")
   String browserType();
+  
+  @Config.Key("browser.headless")
+  @DefaultValue("true")
+  boolean headlessBrowser();
 
   @Config.Key("gui.clearLogInterval")
   @DefaultValue("86400")

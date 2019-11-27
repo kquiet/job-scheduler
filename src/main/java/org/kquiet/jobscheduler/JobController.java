@@ -53,7 +53,7 @@ public class JobController {
   private static final Logger LOGGER = LoggerFactory.getLogger(JobController.class);
 
   private final SystemConfig configInfo = ConfigCache.getOrCreate(SystemConfig.class);
-  private volatile ActionRunner actionRunner;
+  private volatile ActionRunner browserAgent;
   private final Phaser interactionPhaser;
   private volatile InteractionType latestInteractionType;
   private volatile Runnable preInteractionFunc;
@@ -70,7 +70,7 @@ public class JobController {
    * Create a new job controller.
    */
   public JobController() {
-    actionRunner = createNewActionRunner();
+    browserAgent = createNewActionRunner();
     int parallelism = configInfo.jobParallelism();
     jobExecutor = new PausableScheduledThreadPoolExecutor("CtrlJobExecutor", parallelism);
     jobExecutor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
@@ -216,8 +216,8 @@ public class JobController {
   public void stop() {
     try {
       jobExecutor.shutdown();
-      if (actionRunner != null) {
-        actionRunner.close();
+      if (browserAgent != null) {
+        browserAgent.close();
       }
       scheduledTask.clear();
     } catch (Exception ex) {
@@ -245,8 +245,8 @@ public class JobController {
     try {
       switch (target)  {
         case Browser:
-          if (this.actionRunner != null) {
-            this.actionRunner.pause();
+          if (this.browserAgent != null) {
+            this.browserAgent.pause();
             LOGGER.info("[Ctrl] Bowser paused");
           }
           break;
@@ -312,8 +312,8 @@ public class JobController {
     try {
       switch (target)  {
         case Browser:
-          if (this.actionRunner != null) {
-            this.actionRunner.resume();
+          if (this.browserAgent != null) {
+            this.browserAgent.resume();
             LOGGER.info("[Ctrl] Browser resumed");
           }
           break;
@@ -425,6 +425,9 @@ public class JobController {
 
   private ActionRunner createNewActionRunner() {
     BrowserType browserType = BrowserType.fromString(configInfo.browserType());
+    if (configInfo.headlessBrowser()) {
+      System.setProperty("webdriver_headless","yes");
+    }
     ActionRunner btm = browserType == null ? null : new BasicActionRunner(PageLoadStrategy.NONE,
         browserType, 1).setName("ActionRunner");
     if (btm != null) {
@@ -440,20 +443,20 @@ public class JobController {
    * @return true if the browser task is successfully accepted, otherwise false
    */
   public boolean acceptBrowserTask(ActionComposer task) {
-    if (actionRunner == null || task == null) {
+    if (browserAgent == null || task == null) {
       return false;
     }
 
-    synchronized (actionRunner) {
-      if (actionRunner == null) {
+    synchronized (browserAgent) {
+      if (browserAgent == null) {
         return false;
       }
       
       try {
-        if (!actionRunner.isBrowserAlive()) {
+        if (!browserAgent.isBrowserAlive()) {
           restartBrowserTaskManager();
         }
-        actionRunner.executeComposer(task);
+        browserAgent.executeComposer(task);
         return true;
       } catch (Exception ex) {
         LOGGER.error("[Ctrl] accept task fail", ex);
@@ -466,21 +469,21 @@ public class JobController {
    * Close current internal browser and recreate a new one.
    */
   public void restartBrowserTaskManager() {
-    if (actionRunner == null) {
+    if (browserAgent == null) {
       return;
     }
-    synchronized (actionRunner) {
-      if (actionRunner == null) {
+    synchronized (browserAgent) {
+      if (browserAgent == null) {
         return;
       }
       
       try {
-        actionRunner.close();
+        browserAgent.close();
         LOGGER.info("[Ctrl] browser task manger closed");
       } catch (Exception ex) {
         LOGGER.error("[Ctrl] Close browser error", ex);
       }
-      actionRunner = createNewActionRunner();
+      browserAgent = createNewActionRunner();
     }
   }
   
