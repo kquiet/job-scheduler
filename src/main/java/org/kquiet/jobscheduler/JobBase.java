@@ -158,7 +158,7 @@ public abstract class JobBase implements Runnable {
   /**
    * Get parameter value.
    * 
-   * @param name name of parameter
+   * @param name the name of parameter
    * @return parameter value of specified parameter name
    */
   public final String getParameter(String name) {

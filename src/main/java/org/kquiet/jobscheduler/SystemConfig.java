@@ -49,20 +49,21 @@ import org.slf4j.LoggerFactory;
 @Config.Sources({"file:jobscheduler.config", "classpath:jobscheduler.config"})
 @Config.LoadPolicy(Config.LoadType.FIRST)
 public interface SystemConfig extends Reloadable {
-  @Config.Key("guiFlag")
+  @Config.Key("gui.enable")
   @DefaultValue("false")
   boolean guiFlag();
 
   @Config.Key("instanceName")
+  @DefaultValue("")
   String instanceName();
 
   @Config.Key("browser.type")
   @DefaultValue("")
   String browserType();
 
-  @Config.Key("log.clear.interval")
+  @Config.Key("gui.clearLogInterval")
   @DefaultValue("86400")
-  int logClearInterval();
+  int clearLogInterval();
 
   @Config.Key("job.parallelism")
   @DefaultValue("1")
@@ -70,6 +71,7 @@ public interface SystemConfig extends Reloadable {
 
   @Config.ConverterClass(JobListConverter.class)
   @Config.Key("job.enable")
+  @DefaultValue("")
   Map<String, JobConfig> jobs();
 
   @Sources({"file:jobscheduler.config", "classpath:jobscheduler.config"})

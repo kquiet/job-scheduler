@@ -377,7 +377,7 @@ public class MonitorFrame extends javax.swing.JFrame {
     timerExecutor = new PausableScheduledThreadPoolExecutor("FrameTimerExecutor", 1);
     timerExecutor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
     timerExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-    int logClearInterval = configInfo.logClearInterval();
+    int logClearInterval = configInfo.clearLogInterval();
     timerExecutor.scheduleWithFixedDelay(() -> {
       SwingUtilities.invokeLater(() -> {
         jtextAreaInfoLog.setText(null);
