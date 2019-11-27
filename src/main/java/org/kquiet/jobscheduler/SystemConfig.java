@@ -124,7 +124,7 @@ public interface SystemConfig extends Reloadable {
       Logger logger = LoggerFactory.getLogger(SystemConfig.class);
       try {
         if (Optional.ofNullable(input).orElse("").trim().isEmpty()) {
-          return Optional.of(LocalDateTime.MIN);
+          return Optional.of(LocalDateTime.parse("1900-01-01T00:00:00"));
         } else {
           return Optional.of(LocalDateTime.parse(input));
         }

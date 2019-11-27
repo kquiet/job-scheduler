@@ -122,6 +122,15 @@ public class JobController {
     return () -> {
       try {
         JobConfig config = jobToRun.getTimerConfig();
+        //cancel according to config
+        if (!TimeUtility.isBetween(config.start().get(), config.end().get(), LocalDateTime.now())) {
+          scheduledTask.get(jobToRun.getJobName()).cancel(false);
+          LOGGER.info("[Scheduler] Job({}) is cancelled because it isn't allowed to be executed"
+              + " outside the period:{} ~ {}", jobToRun.getJobName(),
+              TimeUtility.toStr(config.start().get(), "yyyy-MM-dd HH:mm:ss"),
+              TimeUtility.toStr(config.end().get(), "yyyy-MM-dd HH:mm:ss"));
+          return;
+        }
 
         if (!config.scheduleAfterExec()) {
           LOGGER.info("[Scheduler] Next execution of {} will be at around {}",
@@ -141,7 +150,7 @@ public class JobController {
         try {
           jobToRun.run();
         } catch (Exception ex) {
-          LOGGER.error("[Scheduler] {} doJob exception:", jobToRun.getJobName(), ex);
+          LOGGER.error("[Scheduler] {} execution exception:", jobToRun.getJobName(), ex);
         }
 
         if (config.scheduleAfterExec()) {
@@ -157,7 +166,7 @@ public class JobController {
   private Iterable<JobBase> getConfigJobs() {
     Map<String, JobConfig> jobConfigMap = configInfo.jobs();
     if (jobConfigMap == null) {
-      LOGGER.warn("Can't find jobs from config!");
+      LOGGER.warn("[Ctrl] Can't find jobs from config!");
       return new ArrayList<JobBase>();
     }
     
@@ -170,7 +179,7 @@ public class JobController {
         Constructor<?> implConstructor = implClass.getConstructor(String.class);
         jobList.add(((JobBase)implConstructor.newInstance(jobName)).setJobController(this));
       } catch (Exception ex) {
-        LOGGER.error("Can't instantiate job class:{},{}", jobName, implName, ex);
+        LOGGER.error("[Ctrl] Can't instantiate job class:{},{}", jobName, implName, ex);
       }
     }
     return jobList;
