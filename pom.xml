@@ -29,7 +29,7 @@
         <dependency>
             <groupId>org.kquiet</groupId>
             <artifactId>auto-browser</artifactId>
-            <version>1.0.2</version>
+            <version>1.1.0</version>
         </dependency>
         
         <dependency>
@@ -141,7 +141,6 @@
 				<version>3.2.1</version>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.8</version>
 			</plugin>
@@ -154,29 +153,16 @@
 				<version>3.0.0-M3</version>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
 				<version>3.7.1</version>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-project-info-reports-plugin</artifactId>
 				<version>3.0.0</version>
 			</plugin>
 			<plugin>
-				<groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<version>1.6.8</version>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
 				<version>1.6</version>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<version>2.5.3</version>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -184,7 +170,28 @@
 				<version>3.0.5</version>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<version>1.6.8</version>
+				<extensions>true</extensions>
+				<configuration>
+					<serverId>ossrh-kquiet</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-release-plugin</artifactId>
+                <version>2.5.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <useReleaseProfile>false</useReleaseProfile>
+                    <releaseProfiles>release</releaseProfiles>
+                    <goals>deploy</goals>
+                </configuration>
+            </plugin>
+			<plugin>
 				<artifactId>maven-checkstyle-plugin</artifactId>
 				<version>3.1.0</version>
 				<executions>
@@ -209,6 +216,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.1.1</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -308,10 +316,6 @@
                     <findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>
                 </configuration>
 			</plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-            </plugin>
         </plugins>
     </reporting>
     
@@ -327,6 +331,7 @@
                 <plugins>
 	                <plugin>
 		                <artifactId>maven-resources-plugin</artifactId>
+		                <version>3.1.0</version>
 		                <executions>
 		                    <execution>
 		                        <id>copy-resources-target</id>
@@ -369,6 +374,7 @@
 		            </plugin>
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M3</version>
                         <configuration>
                             <systemPropertyVariables>
                                 <webdriver.chrome.driver>${test.webdriver.directory.chrome.windows}${file.separator}chromedriver.exe</webdriver.chrome.driver>
@@ -391,6 +397,7 @@
                 <plugins>
                     <plugin>
 		                <artifactId>maven-resources-plugin</artifactId>
+		                <version>3.1.0</version>
 		                <executions>
 		                    <execution>
 		                        <id>copy-resources-target</id>
@@ -433,6 +440,7 @@
 		            </plugin>
                     <plugin>
                         <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.8</version>
                         <executions>
                         	<execution>
                                 <id>chmod-sh</id>
@@ -472,6 +480,7 @@
                     </plugin>
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M3</version>
                         <configuration>                            
                             <systemPropertyVariables>
                                 <webdriver.chrome.driver>${project.build.testOutputDirectory}${file.separator}chromedriver</webdriver.chrome.driver>
@@ -489,6 +498,7 @@
                 <plugins>
                     <plugin>
                         <artifactId>maven-source-plugin</artifactId>
+                        <version>3.0.1</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -499,7 +509,8 @@
                         </executions>
                     </plugin>
                     <plugin>
-                        <artifactId>maven-javadoc-plugin</artifactId>
+		                <artifactId>maven-javadoc-plugin</artifactId>
+		                <version>3.0.1</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -512,19 +523,9 @@
                             </execution>
                         </executions>
                     </plugin>
-					<plugin>
-						<groupId>org.sonatype.plugins</groupId>
-						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<extensions>true</extensions>
-						<configuration>
-							<serverId>ossrh-kquiet</serverId>
-							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-							<autoReleaseAfterClose>true</autoReleaseAfterClose>
-						</configuration>
-					</plugin>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -533,7 +534,7 @@
                                     <goal>sign</goal>
                                 </goals>
 								<configuration>
-									<keyname>${gpg-kquiet.keyname}</keyname>
+									<keyname>${gpg.keyname}</keyname>
 									<passphraseServerId>gpg-kquiet</passphraseServerId>
 								</configuration>
                             </execution>

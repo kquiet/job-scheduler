@@ -1,0 +1,21 @@
+## YAML Template.
+language: java
+
+branches:
+  only:
+    - master
+
+os: linux
+
+dist: xenial
+
+jdk: openjdk8
+
+cache:
+  directories:
+    - $HOME/.m2
+
+install: true
+
+script:
+  - mvn test -B

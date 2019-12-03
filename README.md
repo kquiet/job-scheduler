@@ -1,11 +1,11 @@
-# Job-Scheduler
+# Job-Scheduler [![Travis CI build status](https://travis-ci.org/kquiet/job-scheduler.svg?branch=master)](https://travis-ci.org/kquiet/job-scheduler)
 Job-Scheduler is a simple platform made in Java language which could control
 multiple jobs to be executed by configured schedules. It incorporates
 [auto-browser][] to support customized browser automation in addition to
 vanilla(non-browser) jobs.
 
 ## Getting Started
-Add below to maven's `pom.xml`:
+Add below to [maven][]'s `pom.xml`:
 ```xml
 <dependency>
   <groupId>org.kquiet</groupId>
@@ -123,4 +123,5 @@ the same job class in different job names like this:
 proper value according to your environment, and add the mapping of volume path
 `/tmp/.X11-unix` to container, e.g., `docker run -d -e DISPLAY=:0 -v /tmp/.X11-unix:/tmp/.X11-unix kquiet/job-scheduler:latest`.
 
+[maven]: https://maven.apache.org/ "maven official website"
 [auto-browser]: https://github.com/kquiet/auto-browser "auto-browser in github"
