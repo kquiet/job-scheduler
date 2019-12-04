@@ -29,7 +29,6 @@ script: skip
 
 jobs:
   include:
-    - stage: "package&deploy"
     - script:
       - mvn clean package -B -Ddockerfile.skip
       - projectVersion=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout) && echo $projectVersion
