@@ -19,18 +19,20 @@ env:
   global:
   - secure: Xq36ggStKbLXbPHvjT7uxtihhGxyp/3Yu52nZgNk32+DWBqDrhkorwGtojXKp/7MfEe6rtfXJ6QAYZF+PcTu1sPldqprgAIDHZ8BYXWi3wpqcsnCaFpDc4jn2lAQNQZPedL5awx57WUO8QtkqxWKeD4AogXr0bE/DRCvlR1oBCxlI7n8jGkfqXwd93XSl3JPqraJ/B//hwsGa/7gyvZqotLNmJ9OrgNI/dqOvwjzE49vnTbGFHmNrHwe2W+BzuxsyqIjfS3gkNDDg1/4G6RyKk5gaYPQQkEGuVP7r0dQ2xQrNX7QKeFs2vkV8ov24yjT+5T3vaTU5JlRx+IuX2KHawWtWYOuJPDk7T47XIMXl18ckuVMHoS8GMwFlBOVf17xyUiXyXD6igx+aySlKPvANe7uSu8ntGtzB36gkW37E5aznDjS6fzmyQzO7+AeyAGWPY4bMH0bmN0pBVAsyv8Q2u6xWh1b6rtqaN7JuPwOW5Teud6lXXYXZsnNg2hYmntC53b9TEAhvHG7IOmzGMHqrPSFRfL5h4Y77o8gV/dEsXru6/6Hhb7nfKOkxTenTal+G/eG6Gu8oinbx5tgyEoiXCWcRuGBFDjXyvhQHVsJ0ZugQKGf0qXG3NVeJPt28ocKTADrdvrEws6fuw62olW98UaJeN6V0x+kmvqB/KweKqc=
   - secure: DX6zZNWTQZG4bKu/zuGvQfM/E2blbW8iCJTSmicZZ0KfjhlyZEzzKK/qJwWKCn20p/sXsLKdoYN2saOMxV4d0biX8nWdpXhSz7YS9YNAvF+uohiYKyfsH+Rpm6DttE66do/LKdNmV3QEDJk0Tzr+vZHCo+Rh3cvUyBE6DJ8BF2BUIIK5sgZhtlq0vKGA799kL+onAcTux6xjyIFU53GHi3hsS2r+ibFsefgPAc0DZ6yt4QyfvODXBtjP3g3aCZvXHVi4IZBsk7XqsSQA1lTI4SE0Y4BEmXGRXRD0PFX2yhrgujiTx8cvI8lqCFpaJlbS+CI1tWM2faU5T63QvtyWRgFL0TQQUXrfDvsp4z7A8wB0WHxcVYy09ddSlG6WUSNkc7CbWW272fnjA1CxJnYLSvdodmWuy0T3IlvRMpM+sH/dTPmjLJ0KwgycuR5P7VvtCFoKxKfY4PODmBaS+V+MV3xUmszb8qvqAoLQH+wTkjNcW8q603fJD2d/Z9k/M1c9gddj6QxllipAeonXeIY3hIQnyPJIvdDCivWHmrFBQ5CffAfdI4BF6Ay3Adq5FBa4NJeQAs4YfGbT1BgRjXxBjkKpIxJ8uIWmlMNpnrRlQ1lAvVeEu5EJkR19Ffq0hlIZUODbCZBist7spdIyW5JWRZC+OidQHXOLC3DUB8BEeIE=
+  - secure: Ufgmn8v0u+7Hb/Kz/JlQtvDpobYeeFHk/Wyi9ZyWDqhY3VcPpoAUsupbjTrIqE/CEzZbpbkWZIaEmXpHEKLxb9x6YcM2mWKFj/J3cIHO3xUrLvW5rxqLWvVdZsIbfOBCCfaD+oz94jbkCe2Ko7NO/E3H1x6ek1HYZfqluf4C3r+6r0ktDLMYqL42Zxbr8clh8lUARfEtHn+Pm1yEOW2wmYoTnBhJYxU8/9SJztt4XU/1zcJuySxGFSVaYszHrXM5rmnMA69wUWJjvJrhslhn4kAENcBgt7m2sko6QibHYqV4WRISscz4eA6sDtBbODJdrzX40iytah8XF18eb7JfDJWA5OZ1N1b/O8vYMItw9FjeHKafFOS2S71VNw+ZCCGHIxZ32Td4UKECRA+jhO0qggHaPYuFLbt3qOTxoJYoA3LAGlmgYabYI1dNAGy3GPmvAq7k2oZ1vzKeuw4XOV7QyODINV6iqmP2usMJWhg2mNLp2xwy8rOBZQnScSMMj4SnyKX8kijuxVH0qcX4DW/oGDWxejGq0zwvs7LvDCGbXUMND6UoO0u1yS74iFtOPozfBEvPjqQ4LCquMLggw/gdMCC1SUnjV69zqXp3e7WJVU1sXBtY0IO5O1sKI4oyBJMBt31Qd1zdAf1bP4eK3wU0YW6EXm6aFbuK5WFWYPlrRhA=
+  - secure: BGTFXNm8a+ORqYXu12b9kwnCm2bLmOgw00MvAbZsKKufDc3wl8pLaLAUjQUuj9+JnxmODQZdMOuic8lneFjNjzciX4QyrGihe/F10YyvMhnWu2AlJEV7U+cCWWFMB1vCrC6x+c/hypEufG2yJQBL3X35mHwEz2i6wkDXcQn94rprJfbq4/kf7o4KarX6z3Ei4uTQ0YM4+h71x1EYEe+FKXtZn7b79b/GomhUNEHmik7oUrNjolMVT3gYE5XiYem/QILw69cjYCXQEB9ridGphFJUW2xfETvCFg/yDudnhFBHYH5LoBJVVcZKiCk6hfw3IpoAo9k8VH03UhYtVHmE09r/WOIiRl+u9E6woF/0m7IGZlI59BJQ5G35Hq1fgQL723JiUUsjA4cMsdYKa8PMiKXHhhB/H80tBWyHsGtWBq9LH2u7XfV9UNeHWgjWdU1AogcmdNUqS8Q89mwC6RCJLIqh3d3kZRMqQDm5RrYjIMsGaIRWu7vIXyAziaj+G5d3CharztIY5mf/h1mFuShBgRKNVJ9c4illURaGPhYANZlpFOU8rqU1zw3ImDUXcg4T3sPcbvP73sgWEqmy69Pmz1TAAnnRFL/2d9xjpi1TOEQtO1on7lzLWDWQKNbTZAFXsswNch7GyPpcTt/2c6ysYizfVVCTWqKrjk5PXx5JJkY=
 
 services:
   - docker
 
 install: true
 
-script: skip
-
+script:
+  - cp .travis.settings.xml $HOME/.m2/settings.xml
 jobs:
   include:
     - script:
-      - mvn clean package -B -Ddockerfile.skip
+      - mvn clean package -B
       - projectVersion=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout) && echo $projectVersion
       - cd target
       - docker build -t docker.io/kquiet/job-scheduler:$projectVersion . && docker images
@@ -38,7 +40,7 @@ jobs:
       - docker push docker.io/kquiet/job-scheduler:$projectVersion;
       - |
         if [[ "$projectVersion" =~ .*-SNAPSHOT ]]; then
-          echo "no tag latest for $projectVersion";
+          mvn deploy -DskipTests -Darguments=-DskipTests
         else
           docker tag docker.io/kquiet/job-scheduler:$projectVersion docker.io/kquiet/job-scheduler:latest;
           docker push docker.io/kquiet/job-scheduler:latest;
