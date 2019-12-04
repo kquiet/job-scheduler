@@ -1,4 +1,4 @@
-FROM openjdk:8-jre-alpine3.10
+FROM openjdk:8-jre-alpine3.9
 
 RUN apk update \
  && apk add ca-certificates dbus-x11 fontconfig \
