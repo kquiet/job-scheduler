@@ -27,11 +27,12 @@ services:
 
 install: true
 
-script:
-  - cp .travis.settings.xml $HOME/.m2/settings.xml
+script: skip
+
 jobs:
   include:
     - script:
+      - cp .travis.settings.xml $HOME/.m2/settings.xml
       - mvn clean package -B
       - projectVersion=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout) && echo $projectVersion
       - cd target
@@ -40,7 +41,7 @@ jobs:
       - docker push docker.io/kquiet/job-scheduler:$projectVersion;
       - |
         if [[ "$projectVersion" =~ .*-SNAPSHOT ]]; then
-          mvn deploy -DskipTests -Darguments=-DskipTests
+          cd .. && mvn deploy -DskipTests -Darguments=-DskipTests
         else
           docker tag docker.io/kquiet/job-scheduler:$projectVersion docker.io/kquiet/job-scheduler:latest;
           docker push docker.io/kquiet/job-scheduler:latest;
