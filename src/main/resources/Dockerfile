@@ -1,8 +1,7 @@
-FROM openjdk:8-jre-alpine3.9
+FROM openjdk:8-jre-alpine3.10
 
-RUN echo '@edgetesting http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories \
- && apk update \
- && apk add dbus-x11 fontconfig tzdata pptpclient@edgetesting \
+RUN apk update \
+ && apk add ca-certificates dbus-x11 fontconfig \
  && mkdir -p /usr/share/fonts \
  && wget https://github.com/googlei18n/noto-cjk/raw/master/NotoSansCJK-Regular.ttc -O /usr/share/fonts/NotoSansCJK-Regular.ttc \
  && mkdir -p /opt/kquiet/${project.artifactId}/ext \
