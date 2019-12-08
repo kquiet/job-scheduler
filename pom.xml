@@ -239,13 +239,13 @@
                     <!--
                         Enables analysis which takes more memory but finds more bugs.
                         If you run out of memory, changes the value of the effort element
-                        to 'low'.
+                        to 'Low'.
                     -->
                     <effort>Max</effort>
                     <!-- Build doesn't fail if problems are found -->
                     <failOnError>false</failOnError>
-                    <!-- Reports all bugs (available values are low, medium and max) -->
-                    <threshold>low</threshold>
+                    <!-- Reports all bugs (available values are Low, Medium and Max) -->
+                    <threshold>Low</threshold>
                     <!-- Produces XML report -->
                     <xmlOutput>true</xmlOutput>
                     <!-- Configures the directory in which the XML report is created -->
@@ -310,7 +310,7 @@
 		            </plugin>
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M3</version>
+                        <version>3.0.0-M4</version>
                         <configuration>
                             <systemPropertyVariables>
                                 <webdriver.chrome.driver>${test.webdriver.directory.chrome.windows}${file.separator}chromedriver.exe</webdriver.chrome.driver>
@@ -416,7 +416,7 @@
                     </plugin>
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M3</version>
+                        <version>3.0.0-M4</version>
                         <configuration>                            
                             <systemPropertyVariables>
                                 <webdriver.chrome.driver>${project.build.testOutputDirectory}${file.separator}chromedriver</webdriver.chrome.driver>
@@ -434,7 +434,7 @@
                 <plugins>
                     <plugin>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.0.1</version>
+                        <version>3.2.0</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -446,7 +446,7 @@
                     </plugin>
                     <plugin>
 		                <artifactId>maven-javadoc-plugin</artifactId>
-		                <version>3.0.1</version>
+		                <version>3.1.1</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
