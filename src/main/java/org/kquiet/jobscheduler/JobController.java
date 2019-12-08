@@ -483,8 +483,8 @@ public class JobController {
       } catch (Exception ex) {
         LOGGER.error("[Ctrl] Close browser error", ex);
       }
-      browserAgent = createNewActionRunner();
     }
+    browserAgent = createNewActionRunner();
   }
   
   /**
@@ -556,7 +556,7 @@ public class JobController {
     this.executingJobDescriptionConsumer = executingJobDescriptionConsumer;
   }
   
-  private class PauseConfig {
+  private static class PauseConfig {
     private volatile boolean isPaused = false;
     private volatile boolean autoResumable = true;
     private volatile Runnable afterPauseFunc = null;
