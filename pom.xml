@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.kquiet</groupId>
     <artifactId>job-scheduler</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>A job scheduler which supports customized browser automation.</description>
@@ -512,6 +512,6 @@
         <connection>scm:git:git://github.com/kquiet/job-scheduler.git</connection>
         <developerConnection>scm:git:git@github.com:kquiet/job-scheduler.git</developerConnection>
         <url>https://github.com/kquiet/job-scheduler/tree/master</url>
-      	<tag>HEAD</tag>
+      	<tag>job-scheduler-1.0.1</tag>
   	</scm>
 </project>
