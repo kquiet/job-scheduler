@@ -59,6 +59,8 @@ instanceName=JobSchedulerDefault
 gui.enable=false
 gui.clearLogInterval=86400
 browser.type=
+browser.maxTask=1
+browser.pageLoadStrategy=NONE
 
 job.parallelism=1
 job.enable=RestartBrowser
@@ -77,6 +79,8 @@ job.RestartBrowser.parameter={}
 |`gui.enable`|`false`|Set `true` to enable optional monitoring GUI|
 |`gui.clearLogInterval`|`86400`|Clear log on GUI with specified rate(in seconds)|
 |`browser.type`||Available values are `chrome` and `firefox`. Leave it to blank if internal browser is not required.|
+|`browser.maxTask`|`1`|maximum number of tasks that can be run in the internal browser concurrently|
+|`browser.pageLoadStrategy`|`NONE`|It controls the behavior of waiting for page loads in the internal browser|
 |`browser.headless`|`true`|`true`: internal browser will display its GUI;`false`: internal browser won't display its GUI|
 |`job.parallelism`|`1`|It controls how many jobs could be executed concurrently at most.|
 |`job.enable`||Only the jobs with their names listed here will be scheduled. Use `,` to separate each other.|

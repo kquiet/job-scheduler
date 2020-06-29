@@ -15,6 +15,7 @@ cache:
   directories:
     - $HOME/.m2
 
+# 1&2: docker logins; 3&4: ossrh logins
 env:
   global:
   - secure: Xq36ggStKbLXbPHvjT7uxtihhGxyp/3Yu52nZgNk32+DWBqDrhkorwGtojXKp/7MfEe6rtfXJ6QAYZF+PcTu1sPldqprgAIDHZ8BYXWi3wpqcsnCaFpDc4jn2lAQNQZPedL5awx57WUO8QtkqxWKeD4AogXr0bE/DRCvlR1oBCxlI7n8jGkfqXwd93XSl3JPqraJ/B//hwsGa/7gyvZqotLNmJ9OrgNI/dqOvwjzE49vnTbGFHmNrHwe2W+BzuxsyqIjfS3gkNDDg1/4G6RyKk5gaYPQQkEGuVP7r0dQ2xQrNX7QKeFs2vkV8ov24yjT+5T3vaTU5JlRx+IuX2KHawWtWYOuJPDk7T47XIMXl18ckuVMHoS8GMwFlBOVf17xyUiXyXD6igx+aySlKPvANe7uSu8ntGtzB36gkW37E5aznDjS6fzmyQzO7+AeyAGWPY4bMH0bmN0pBVAsyv8Q2u6xWh1b6rtqaN7JuPwOW5Teud6lXXYXZsnNg2hYmntC53b9TEAhvHG7IOmzGMHqrPSFRfL5h4Y77o8gV/dEsXru6/6Hhb7nfKOkxTenTal+G/eG6Gu8oinbx5tgyEoiXCWcRuGBFDjXyvhQHVsJ0ZugQKGf0qXG3NVeJPt28ocKTADrdvrEws6fuw62olW98UaJeN6V0x+kmvqB/KweKqc=

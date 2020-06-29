@@ -36,7 +36,7 @@ import org.aeonbits.owner.Config;
 import org.aeonbits.owner.ConfigFactory;
 import org.aeonbits.owner.Converter;
 import org.aeonbits.owner.Reloadable;
-
+import org.openqa.selenium.PageLoadStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +60,14 @@ public interface SystemConfig extends Reloadable {
   @Config.Key("browser.type")
   @DefaultValue("")
   String browserType();
+  
+  @Config.Key("browser.maxTask")
+  @DefaultValue("1")
+  int browserMaxTask();
+  
+  @Config.Key("browser.pageLoadStrategy")
+  @DefaultValue("NONE")
+  PageLoadStrategy browserPageLoadStrategy();
   
   @Config.Key("browser.headless")
   @DefaultValue("true")

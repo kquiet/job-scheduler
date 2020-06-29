@@ -428,8 +428,9 @@ public class JobController {
     if (configInfo.headlessBrowser()) {
       System.setProperty("webdriver_headless","yes");
     }
-    ActionRunner btm = browserType == null ? null : new BasicActionRunner(PageLoadStrategy.NONE,
-        browserType, 1).setName("ActionRunner");
+    ActionRunner btm = browserType == null ? null : new BasicActionRunner(
+        configInfo.browserPageLoadStrategy(), browserType, configInfo.browserMaxTask())
+        .setName("ActionRunner");
     if (btm != null) {
       LOGGER.info("[Ctrl] browser task manger created");
     }
